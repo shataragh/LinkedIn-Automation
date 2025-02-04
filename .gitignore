@@ -1,0 +1,10 @@
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore sensitive files
+credentials.json
