@@ -1,0 +1,6 @@
+selenium==4.20.0
+undetected-chromedriver==3.5.3
+python-dotenv==1.0.1
+colorama==0.4.6
+tqdm==4.66.4
+requests==2.31.0
