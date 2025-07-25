@@ -1,6 +1,6 @@
 # 🤖 LinkedIn AutoMessenger CLI
 
-![Version](https://img.shields.io/badge/version-v0.1.1-blue)
+![Version](https://img.shields.io/badge/version-v0.1.0-blue)
 ![License](https://img.shields.io/github/license/shataragh/LinkedIn-Automation)
 ![Made with Python](https://img.shields.io/badge/made%20with-Python%203.10-3776AB?logo=python&logoColor=white)
 ![Open Source](https://img.shields.io/badge/open%20source-%E2%9C%94-green)
