@@ -1,144 +1,118 @@
+import argparse
+import logging
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
 
-# Initialize Chrome WebDriver with options to suppress logs
-options = webdriver.ChromeOptions()
-options.add_argument("--disable-webrtc")  # Disable WebRTC to suppress STUN errors
-options.add_argument("--log-level=3")    # Suppress non-fatal logs
-driver = webdriver.Chrome(options=options)
+# --- Configuration ---
+logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
-# Open the LinkedIn page
-target_url = "https://www.linkedin.com/mynetwork/catch-up/all/"
-driver.get(target_url)
+def setup_driver():
+    """Initialize and return a Chrome WebDriver with stealth options."""
+    options = webdriver.ChromeOptions()
+    options.add_argument("--disable-webrtc")
+    options.add_argument("--log-level=3")
+    return webdriver.Chrome(options=options)
 
-# Wait for the page to load completely
-wait = WebDriverWait(driver, 10)
+# --- Page Functions ---
+def is_on_target_page(driver, target_url):
+    return driver.current_url.startswith(target_url)
 
-def get_scroll_position():
-    """Get the current vertical scroll position of the page."""
+def get_scroll_position(driver):
     return driver.execute_script("return window.scrollY;")
 
-def scroll_down():
-    """Scroll down the page to load more content."""
+def scroll_down(driver):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)  # Wait for new content to load
+    time.sleep(2)
 
-def is_on_target_page():
-    """Check if the current URL matches the target page."""
-    current_url = driver.current_url
-    return current_url.startswith(target_url)
+def find_congrats_on_elements(driver):
+    xpath = "//span[contains(text(), 'Congrats on')] | //div[contains(., 'Congrats on')]"
+    return driver.find_elements(By.XPATH, xpath)
 
-def find_congrats_on_elements():
-    """Find all elements containing the text 'Congrats on'."""
-    return driver.find_elements(By.XPATH, "//span[contains(text(), 'Congrats on')] | //div[contains(., 'Congrats on')]")
-
-def click_and_send(element):
-    """Click an element associated with 'Congrats on' and send the message."""
+def click_and_send(driver, wait, target_url, element):
     try:
-        # Check if still on the target page
-        if not is_on_target_page():
-            print("Navigated away from the target page. Stopping the process.")
+        if not is_on_target_page(driver, target_url):
+            logging.warning("Navigated away from target. Aborting.")
             return
-        
-        # Scroll the element into view
+
         driver.execute_script("arguments[0].scrollIntoView(true);", element)
-        time.sleep(0.5)  # Short delay to mimic human behavior
-        
-        # Check if the element is interactable
+        time.sleep(0.5)
+
         if not element.is_displayed() or not element.is_enabled():
-            print(f"Element is not interactable: {element.tag_name}")
+            logging.debug("Element not interactable.")
             return
-        
-        # Find the clickable button or link within the parent element
-        clickable_element = None
+
         try:
-            clickable_element = element.find_element(By.XPATH, ".//button | .//a")
+            clickable = element.find_element(By.XPATH, ".//button | .//a")
         except Exception:
-            print("No clickable child element found within the parent element.")
+            logging.debug("No clickable child found.")
             return
-        
-        # Verify that clicking won't navigate away
-        if clickable_element.tag_name == "a":
-            print("Skipping element because it's a link that may navigate away.")
+
+        if clickable.tag_name == "a":
+            logging.info("Skipping link to avoid navigation.")
             return
-        
-        # Click the clickable element
-        clickable_element.click()
-        
-        # Check if still on the target page after clicking
-        if not is_on_target_page():
-            print("Navigated away from the target page. Stopping the process.")
+
+        clickable.click()
+
+        if not is_on_target_page(driver, target_url):
+            logging.warning("Navigation occurred after click.")
             return
-        
-        # Wait for the prompt to appear and click "Send"
-        send_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Send')]")))
-        time.sleep(0.5)  # Short delay to mimic human behavior
-        send_button.click()
-        
-        # Check for success messages
-        message_sent = wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Message sent')]")))
-        message_success = wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Message sent successfully')]")))
-        
-        if message_sent and message_success:
-            print("Message sent successfully!")
-        else:
-            print("Failed to send message.")
-    
+
+        send_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Send')]")))
+        time.sleep(0.5)
+        send_btn.click()
+
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Message sent')]")))
+        logging.info("Message sent successfully.")
     except Exception as e:
-        print(f"Error processing an element: {e}")
+        logging.error(f"Error handling element: {e}")
 
-def process_all_congrats_on():
-    """Process all elements containing 'Congrats on' on the page."""
-    last_scroll_position = 0
-    
+def process_elements(driver, target_url, wait):
+    last_pos = 0
     while True:
-        # Check if still on the target page
-        if not is_on_target_page():
-            print("Navigated away from the target page. Stopping the process.")
+        if not is_on_target_page(driver, target_url):
             break
-        
-        # Monitor the current scroll position
-        current_scroll_position = get_scroll_position()
-        
-        # Check if the user has scrolled down manually
-        if current_scroll_position > last_scroll_position:
-            print("Detected user scroll. Searching for new 'Congrats on' elements...")
-            last_scroll_position = current_scroll_position
-        
-        # Find all visible elements containing 'Congrats on'
-        congrats_on_elements = find_congrats_on_elements()
-        
-        if not congrats_on_elements:
-            print("No 'Congrats on' elements found. Scrolling down automatically...")
-            scroll_down()
+
+        current_pos = get_scroll_position(driver)
+        if current_pos > last_pos:
+            logging.info("Detected user scroll. Searching for elements...")
+            last_pos = current_pos
+
+        elements = find_congrats_on_elements(driver)
+        if not elements:
+            logging.info("No 'Congrats on' found. Scrolling...")
+            scroll_down(driver)
             continue
-        
-        # Process each element one by one
-        for i, element in enumerate(congrats_on_elements):
-            print(f"Processing 'Congrats on' element {i + 1} of {len(congrats_on_elements)}...")
-            click_and_send(element)
-            time.sleep(1)  # Maximum delay of 1 second between clicks
-        
-        # After processing all elements, scroll down to check for more
-        print("Finished processing current batch. Scrolling down to check for more...")
-        scroll_down()
 
+        for i, el in enumerate(elements):
+            logging.info(f"Processing element {i + 1} of {len(elements)}")
+            click_and_send(driver, wait, target_url, el)
+            time.sleep(1)
+
+        logging.info("Batch processed. Scrolling for more...")
+        scroll_down(driver)
+
+# --- Main ---
 def main():
-    """Main function to ask for user confirmation before starting the automation."""
-    user_input = input("Do you want to start the process? (Yes, Start): ").strip().lower()
-    
-    if user_input == "yes, start":
-        print("Starting the process...")
-        process_all_congrats_on()
-    else:
-        print("Process aborted by the user.")
+    parser = argparse.ArgumentParser(description="LinkedIn congrats message automation.")
+    parser.add_argument("--url", default="https://www.linkedin.com/mynetwork/catch-up/all/", help="Target LinkedIn URL")
+    parser.add_argument("--auto", action="store_true", help="Start process without prompt")
+    args = parser.parse_args()
 
-# Start the program
-try:
+    driver = setup_driver()
+    wait = WebDriverWait(driver, 10)
+
+    try:
+        driver.get(args.url)
+        if args.auto or input("Do you want to start the process? (yes/start): ").lower().strip() in ["yes", "start"]:
+            logging.info("Starting automation...")
+            process_elements(driver, args.url, wait)
+        else:
+            logging.info("Process aborted by user.")
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
     main()
-finally:
-    # Close the browser after completion
-    driver.quit()
