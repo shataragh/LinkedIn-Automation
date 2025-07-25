@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://yourimageshare.com/ib/zE71n8wtvz.png" alt="LinkeIn Automation Screenshot" width="800"/>
+</div>
+
 # 🤖 LinkedIn AutoMessenger CLI
 
 ![Version](https://img.shields.io/badge/version-v0.1.0-blue)
