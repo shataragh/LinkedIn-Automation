@@ -1,16 +1,41 @@
-# LinkedIn Automation Script
+# 🤖 LinkedIn AutoMessenger CLI
 
-This Python script automates interactions on LinkedIn's "Catch Up" page for personal productivity while ensuring compliance with LinkedIn's security policies.
+![Version](https://img.shields.io/badge/version-v0.1.1-blue)
+![License](https://img.shields.io/github/license/shataragh/LinkedIn-Automation)
+![Made with Python](https://img.shields.io/badge/made%20with-Python%203.10-3776AB?logo=python&logoColor=white)
+![Open Source](https://img.shields.io/badge/open%20source-%E2%9C%94-green)
+![Privacy First](https://img.shields.io/badge/privacy%20focused-%F0%9F%94%91-critical)
 
-## Features
-- Automates congratulatory messages.
-- Includes safeguards to prevent misuse.
-- Fully compliant with LinkedIn's Terms of Service.
+> 🚀 Automate your LinkedIn outreach with human-like precision  
+> 🔍 Target professionals by keywords and roles  
+> 🔐 No telemetry. No data retention. Respecting user privacy  
+> 🌐 Designed for restricted environments (WSL, Kali, hardened VPS)
 
-## How to Use
-1. Clone this repository.
-2. Install dependencies (`selenium`).
-3. Run the script.
+---
 
-## Disclaimer
-This script is for educational purposes only. Always comply with LinkedIn's policies.
+## 🧩 Overview
+
+LinkedIn AutoMessenger lets you reach out to professionals with custom messages using the power of CLI and browser automation.  
+Built with Selenium and Python, it balances simplicity, stealth, and privacy for developers in censorship-prone regions.
+
+---
+
+## ⚙️ Features
+
+- 🕵️‍♂️ Human-behavior-mimicking browser automation
+- 🎛️ CLI flags for custom targeting and dynamic messaging
+- 🔐 Headless execution with operational safety
+- 📜 Logging support (timestamped events)
+- 💡 Filter by keywords (e.g. `engineer AND iran`)
+- 🧼 No session retention — clean runs every time
+
+---
+
+## 🚀 Installation
+
+Clone the repo and install dependencies:
+
+```bash
+git clone https://github.com/shataragh/LinkedIn-Automation.git
+cd LinkedIn-Automation
+pip install -r requirements.txt
